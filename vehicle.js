@@ -1,7 +1,6 @@
 class Vehicle {
     constructor(x, y) {
         this.pos = new p5.Vector(random(width), random(height))
-        // this.pos = createVector(x, y)
         this.vel = p5.Vector.random2D()
         this.acc = new p5.Vector()
         this.rOriginal = random(5, 28)

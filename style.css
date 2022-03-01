@@ -8,10 +8,3 @@ canvas {
   display: block;
   margin: auto;
 }
-
-main {
-  width: auto;
-  height: 100%;
-  margin: auto;
-  /*border: 5px solid white;*/
-}

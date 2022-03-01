@@ -6,7 +6,18 @@
  *  pixels to circles anchored to a location on a canvas, and apply steering
  *  behaviors to them.
  *
+ *  video = createCapture(VIDEO) ❓ what is VIDEO? how do we load our own
+ *  video.size(48, 48)
+ *  in draw():
+ *     video.loadPixels()
+ *     pixelIndex = (i+j*video.width)*4
+ *         j is columns, i is rows
+ *     nested for loop for width and height
+ *     grab color for each pixel
+ *     draw to canvas
  *
+ *  TODO
+ *      add notes when bubbles warp from one edge to another
  */
 
 
@@ -18,47 +29,71 @@ let points = []
 let amp
 let arrival // flag for whether 'going home' is turned on
 
+let vid // our source video
 
 function preload() {
     font = loadFont('data/bpdots.otf')
     // font = loadFont('data/consola.ttf')
     song = loadSound('data/danielTiger.mp3', null, null)
+    vid = createVideo('data/dtn240p.mp4')
 }
 
+let playing = false;
+let button;
+
+// plays or pauses the video depending on current state
+function toggleVid() {
+    if (playing) {
+        vid.pause()
+        button.html('▶️')
+    } else {
+        vid.loop()
+        vid.hide()
+        button.html('⏸️')
+    }
+    playing = !playing;
+}
 
 function setup() {
-    createCanvas(600, 300)
+    createCanvas(640, 360)
     colorMode(HSB, 360, 100, 100, 100)
 
-    textAlign(CENTER, CENTER);
-    /**
-     *  Add two sets of points: happy birthday, and Liya! centered below.
-     *  TODO: gain an additional parameter: size. map to all points?
-     */
-    points = font.textToPoints('happy birthday, ', 80, 100, 48, {
-        sampleFactor: 0.01, // increase for more points
-        // simplifyThreshold: 0 // increase to remove collinear points
-    })
+    vid.hide()
 
-    points = points.concat(font.textToPoints('Liya!', 200, 175, 72, {
-        sampleFactor: 0.06, // increase for more points
-    }))
+    button = createButton('▶️');
+    button.style('margin', '10px auto')
+    button.style('display', 'block')
+    button.style('background-color', 'rgb(32, 33, 51)')
+    button.style('border', '0px')
+    button.mousePressed(toggleVid); // attach button listener
+    vid.size(64, 36)
 
 
-    /** populate vehicles array with their coordinates from textToPoints */
-    for (let i = 0; i < points.length; i++) {
-        let pt = points[i]
-        let vehicle = new Vehicle(pt.x, pt.y)
-        vehicles.push(vehicle)
-    }
-
-    amp = new p5.Amplitude()
-    arrival = false
 }
 
 
 function draw() {
     background(236, 37, 25)
+
+    vid.loadPixels()
+    /* loadPixels data is only done in rgb, so we can switch temporarily */
+    colorMode(RGB, 255)
+
+    for (let c=0; c<vid.width; c++) {
+        for (let r=0; r<vid.height; r++) {
+            const pixelIndex = (c+r*vid.width)*4
+            const red = vid.pixels[pixelIndex + 0];
+            const green = vid.pixels[pixelIndex + 1];
+            const blue = vid.pixels[pixelIndex + 2];
+
+            stroke(red, green, blue)
+            strokeWeight(15)
+            point(c*10+5, r*10+5)
+        }
+    }
+
+    colorMode(HSB, 360, 100, 100, 100)
+
 
     /** display all points and behaviors */
     for (let i = 0; i < vehicles.length; i++) {
@@ -70,18 +105,6 @@ function draw() {
 
         if (arrival)
             v.returnToTextOrigin()
-    }
-
-    let level = amp.getLevel();
-    let size = map(level, 0, 1, 2, 120);
-
-    /* adjust the vehicle's radius */
-    const grow = (pt, radius) => {
-        pt.r = radius
-    }
-
-    for (let v of vehicles) {
-        grow(v, size)
     }
 }
 
