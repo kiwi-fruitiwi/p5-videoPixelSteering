@@ -3,14 +3,19 @@ class Vehicle {
         this.pos = new p5.Vector(random(width), random(height))
         this.vel = p5.Vector.random2D()
         this.acc = new p5.Vector()
-        this.rOriginal = random(5, 28)
-        this.r = this.rOriginal
+
+        this.rOriginal = SCALE_FACTOR
+
+        this.r = SCALE_FACTOR
         this.target = new p5.Vector(x, y)
-        this.maxspeed = 5
-        this.maxforce = 1
+        this.maxspeed = 20
+        this.maxforce = 25
         this.hue = random(360)
 
         this.showText = true
+
+        /* our default color is black */
+        this.color = color(0, 0, 0)
     }
 
 
@@ -52,7 +57,7 @@ class Vehicle {
         let mouse = new p5.Vector(mouseX, mouseY)
         let flee = this.flee(mouse).mult(2)
         let distance = p5.Vector.sub(this.pos, mouse).mag()
-        if (distance < 70) {
+        if (distance < SCALE_FACTOR*4) {
             this.applyForce(flee)
         }
     }
@@ -116,8 +121,20 @@ class Vehicle {
         this.pos.add(this.vel)
         this.vel.add(this.acc)
         this.vel.limit(this.maxspeed)
-        this.vel.mult(0.99)
+        // this.vel.mult(0.99)
         this.acc.mult(0)
+    }
+
+
+    renderPixel() {
+        fill(this.color)
+        noStroke()
+        rect(
+            this.pos.x+SCALE_FACTOR/2,
+            this.pos.y+SCALE_FACTOR/2,
+            SCALE_FACTOR,
+            SCALE_FACTOR)
+        // circle(this.pos.x, this.pos.y, this.r)
     }
 
 
@@ -127,7 +144,8 @@ class Vehicle {
         // point(this.pos.x, this.pos.y)
         //noStroke()
 
-        fill(this.hue, 100, 100, 75)
+        // fill(this.hue, 100, 100, 75)
+        fill(this.color)
         circle(this.pos.x, this.pos.y, this.r*2)
 
         textSize(this.r)

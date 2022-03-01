@@ -23,13 +23,19 @@
 
 let song
 let font
-let vehicles = []
-let points = []
+let vehicles
 
 let amp
 let arrival // flag for whether 'going home' is turned on
 
 let vid // our source video
+let playing = false;
+let button;
+
+const VID_WIDTH = 64
+const VID_HEIGHT = 36
+let SCALE_FACTOR
+
 
 function preload() {
     font = loadFont('data/bpdots.otf')
@@ -38,8 +44,6 @@ function preload() {
     vid = createVideo('data/dtn240p.mp4')
 }
 
-let playing = false;
-let button;
 
 // plays or pauses the video depending on current state
 function toggleVid() {
@@ -56,8 +60,9 @@ function toggleVid() {
 
 function setup() {
     createCanvas(640, 360)
-    colorMode(HSB, 360, 100, 100, 100)
-
+    // colorMode(HSB, 360, 100, 100, 100)
+    SCALE_FACTOR = width/VID_WIDTH
+    colorMode(RGB, 255)
     vid.hide()
 
     button = createButton('▶️');
@@ -66,46 +71,87 @@ function setup() {
     button.style('background-color', 'rgb(32, 33, 51)')
     button.style('border', '0px')
     button.mousePressed(toggleVid); // attach button listener
-    vid.size(64, 36)
+    vid.size(VID_WIDTH, VID_HEIGHT)
 
-
+    /**
+     * create array of vehicles that map to 2D location grid
+     *  set vehicle targets on the grid
+     *      canvas size is 640x360 → video size 64x36. grid is 10 px +5 offset
+     *      1D 'wrapping' array with col+row*vid.width, like loadPixels()
+     *          you can call any vehicle at (i, j) with vehicles[i+j*36]
+     */
+    vehicles = []
+    for (let j=0; j<VID_HEIGHT; j++) {
+        for (let i=0; i<VID_WIDTH; i++) {
+            // console.log(`${i}, ${j}`)
+            vehicles.push(
+                new Vehicle(
+                    i*SCALE_FACTOR+SCALE_FACTOR/2,
+                    j*SCALE_FACTOR+SCALE_FACTOR/2))
+        }
+    }
+    // console.log(vehicles.length)
 }
 
 
 function draw() {
-    background(236, 37, 25)
+    // background(236, 37, 25)
+    background(32, 33, 51)
 
-    vid.loadPixels()
+    // console.log(frameRate())
+
     /* loadPixels data is only done in rgb, so we can switch temporarily */
-    colorMode(RGB, 255)
 
-    for (let c=0; c<vid.width; c++) {
-        for (let r=0; r<vid.height; r++) {
-            const pixelIndex = (c+r*vid.width)*4
+
+
+    /**
+     * update colors for each vehicle at each 64x36 grid location
+     */
+    vid.loadPixels()
+    rectMode(CENTER)
+    for (let i=0; i<VID_WIDTH; i++) {
+        for (let j=0; j<VID_HEIGHT; j++) {
+            const pixelIndex = (i+j*VID_WIDTH)*4
             const red = vid.pixels[pixelIndex + 0];
             const green = vid.pixels[pixelIndex + 1];
             const blue = vid.pixels[pixelIndex + 2];
 
-            stroke(red, green, blue)
-            strokeWeight(15)
-            point(c*10+5, r*10+5)
+            const c = color(red, green, blue)
+            // console.log(`${i}, ${j}`)
+            vehicles[i+j*VID_WIDTH].color = c
+
+            // fill(red, green, blue)
+            // strokeWeight(10)
+            // noStroke()
+            // rect(c*10+5, r*10+5, 10, 10)
         }
     }
 
-    colorMode(HSB, 360, 100, 100, 100)
+    /**
+     *  display all the vehicles!
+     */
+    for (let v of vehicles) {
+        v.update()
+        // v.wrap()
+        v.fleeFromMouse()
+        v.returnToTextOrigin()
+        v.renderPixel()
+    }
+
+    // colorMode(HSB, 360, 100, 100, 100)
 
 
     /** display all points and behaviors */
-    for (let i = 0; i < vehicles.length; i++) {
-        let v = vehicles[i]
-        v.fleeFromMouse()
-        v.update()
-        v.wrap()
-        v.show()
-
-        if (arrival)
-            v.returnToTextOrigin()
-    }
+    // for (let i = 0; i < vehicles.length; i++) {
+    //     let v = vehicles[i]
+    //     v.fleeFromMouse()
+    //     v.update()
+    //     v.wrap()
+    //     v.show()
+    //
+    //     if (arrival)
+    //         v.returnToTextOrigin()
+    // }
 }
 
 
