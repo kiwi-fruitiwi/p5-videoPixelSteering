@@ -20,6 +20,11 @@
  *      add notes when bubbles warp from one edge to another
  */
 
+/**
+ *  ☐ center the canvas
+ *  ☐ send pixels out and have them arrive in stages?
+ */
+
 
 let song
 let font
@@ -39,9 +44,8 @@ let SCALE_FACTOR
 
 function preload() {
     font = loadFont('data/bpdots.otf')
-    // font = loadFont('data/consola.ttf')
-    song = loadSound('data/danielTiger.mp3', null, null)
     vid = createVideo('data/dtn240p.mp4')
+    arrival = true
 }
 
 
@@ -55,14 +59,17 @@ function toggleVid() {
         vid.hide()
         button.html('⏸️')
     }
+
     playing = !playing;
 }
 
 function setup() {
     createCanvas(640, 360)
     // colorMode(HSB, 360, 100, 100, 100)
-    SCALE_FACTOR = width/VID_WIDTH
     colorMode(RGB, 255)
+    rectMode(CORNER)
+
+    SCALE_FACTOR = width/VID_WIDTH
     vid.hide()
 
     button = createButton('▶️');
@@ -86,11 +93,12 @@ function setup() {
             // console.log(`${i}, ${j}`)
             vehicles.push(
                 new Vehicle(
-                    i*SCALE_FACTOR+SCALE_FACTOR/2,
-                    j*SCALE_FACTOR+SCALE_FACTOR/2))
+                    // i*SCALE_FACTOR-SCALE_FACTOR/2,
+                    // j*SCALE_FACTOR-SCALE_FACTOR/2))
+                    i*SCALE_FACTOR,
+                    j*SCALE_FACTOR))
         }
     }
-    // console.log(vehicles.length)
 }
 
 
@@ -98,73 +106,50 @@ function draw() {
     // background(236, 37, 25)
     background(32, 33, 51)
 
-    // console.log(frameRate())
+    transferColorsToVehicles()
 
-    /* loadPixels data is only done in rgb, so we can switch temporarily */
+    /** display all the vehicles! */
+    for (let v of vehicles) {
+        v.update()
+        // v.wrap()
+        v.fleeFromMouse()
+        v.renderPixel()
+
+        if (arrival)
+            v.returnToTextOrigin()
+    }
+}
 
 
-
-    /**
-     * update colors for each vehicle at each 64x36 grid location
-     */
+/**
+ * update colors for each vehicle at each 64x36 grid location
+ */
+function transferColorsToVehicles() {
     vid.loadPixels()
-    rectMode(CENTER)
-    for (let i=0; i<VID_WIDTH; i++) {
-        for (let j=0; j<VID_HEIGHT; j++) {
-            const pixelIndex = (i+j*VID_WIDTH)*4
-            const red = vid.pixels[pixelIndex + 0];
+    for (let i = 0; i < VID_WIDTH; i++) {
+        for (let j = 0; j < VID_HEIGHT; j++) {
+            const pixelIndex = (i + j * VID_WIDTH) * 4
+            const red = vid.pixels[pixelIndex];
             const green = vid.pixels[pixelIndex + 1];
             const blue = vid.pixels[pixelIndex + 2];
 
             const c = color(red, green, blue)
             // console.log(`${i}, ${j}`)
-            vehicles[i+j*VID_WIDTH].color = c
-
-            // fill(red, green, blue)
-            // strokeWeight(10)
-            // noStroke()
-            // rect(c*10+5, r*10+5, 10, 10)
+            vehicles[i + j * VID_WIDTH].color = c
         }
     }
-
-    /**
-     *  display all the vehicles!
-     */
-    for (let v of vehicles) {
-        v.update()
-        // v.wrap()
-        v.fleeFromMouse()
-        v.returnToTextOrigin()
-        v.renderPixel()
-    }
-
-    // colorMode(HSB, 360, 100, 100, 100)
-
-
-    /** display all points and behaviors */
-    // for (let i = 0; i < vehicles.length; i++) {
-    //     let v = vehicles[i]
-    //     v.fleeFromMouse()
-    //     v.update()
-    //     v.wrap()
-    //     v.show()
-    //
-    //     if (arrival)
-    //         v.returnToTextOrigin()
-    // }
 }
 
 
 function keyPressed() {
-    /* begin song */
+    /* toggle arrival */
     if (key === 's') {
-        song.play()
+        arrival = !arrival;
     }
 
     /* stop sketch */
     if (key === 'z') {
         noLoop()
-        song.stop()
     }
 
     /* arrival! +recolor */
@@ -173,15 +158,13 @@ function keyPressed() {
 
         for (let index in vehicles) {
             vehicles[index].hue = map(index, 0, vehicles.length, 0, 330)
-            vehicles[index].r = 2
-            vehicles[index].showText = false
         }
     }
 
     /* recolor in ascending rainbow :p */
     if (key === 'c') {
         for (let index in vehicles) {
-            vehicles[index].hue = index
+            vehicles[index].hue = index % 360
         }
     }
 }

@@ -8,7 +8,7 @@ class Vehicle {
 
         this.r = SCALE_FACTOR
         this.target = new p5.Vector(x, y)
-        this.maxspeed = 20
+        this.maxspeed = 15
         this.maxforce = 25
         this.hue = random(360)
 
@@ -121,7 +121,7 @@ class Vehicle {
         this.pos.add(this.vel)
         this.vel.add(this.acc)
         this.vel.limit(this.maxspeed)
-        // this.vel.mult(0.99)
+        this.vel.mult(0.99)
         this.acc.mult(0)
     }
 
@@ -129,33 +129,13 @@ class Vehicle {
     renderPixel() {
         fill(this.color)
         noStroke()
+        // colorMode(HSB, 360, 100, 100, 100)
+        // fill(this.hue, 100, 100, 50)
         rect(
-            this.pos.x+SCALE_FACTOR/2,
-            this.pos.y+SCALE_FACTOR/2,
+            this.pos.x,
+            this.pos.y,
             SCALE_FACTOR,
             SCALE_FACTOR)
         // circle(this.pos.x, this.pos.y, this.r)
-    }
-
-
-    show() {
-        stroke(this.hue, 100, 100, 100)
-        // strokeWeight(2)
-        // point(this.pos.x, this.pos.y)
-        //noStroke()
-
-        // fill(this.hue, 100, 100, 75)
-        fill(this.color)
-        circle(this.pos.x, this.pos.y, this.r*2)
-
-        textSize(this.r)
-
-        fill(0, 0, 100)
-        if (this.showText)
-            text('2', this.pos.x, this.pos.y)
-
-        if (this.r > this.rOriginal) {
-            this.r *= 0.9
-        }
     }
 }
