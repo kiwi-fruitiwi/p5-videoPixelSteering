@@ -15,6 +15,7 @@ class Vehicle {
 
         /* our default color is black */
         this.color = color(0, 0, 0)
+        this.angle = 0
     }
 
 
@@ -128,7 +129,13 @@ class Vehicle {
         if (switchedToTtp) {
             fill(this.hue, 100, 100, 50)
             stroke(this.hue, 100, 100)
-            circle(this.pos.x, this.pos.y, this.r*2)
+            // circle(this.pos.x, this.pos.y, this.r*2)
+            push()
+            translate(this.pos.x, this.pos.y)
+            rotate(this.angle)
+            rect(0, 0, SCALE_FACTOR*.75, SCALE_FACTOR*.75)
+            pop()
+            this.angle += random(0.02, 0.04)
         } else {
             noStroke()
             fill(this.color)

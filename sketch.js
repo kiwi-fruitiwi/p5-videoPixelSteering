@@ -25,7 +25,7 @@
  *      ☐ generate vehicle homes via ttp
  *      ☐ fade out percentage of evenly spaced points → reassign homes
  *      ☐ turn into smaller circles instead of squares → execute behaviors
- *
+ * ☐ on-rails mouseFlee!
  * ☐ something's wrong with edges and wrap → missing pixels at load
  * ☐ instruction div
  * ☐ 's' can turn off arrive behavior for 5 seconds!
@@ -87,6 +87,12 @@ function setup() {
     button.mousePressed(toggleVid); // attach button listener
     vid.size(VID_WIDTH, VID_HEIGHT)
 
+    populateVideoVehicles()
+}
+
+
+function populateVideoVehicles() {
+    colorMode(RGB, 255)
     /**
      * create array of vehicles that map to 2D location grid
      *  set vehicle targets on the grid
@@ -169,6 +175,13 @@ function keyPressed() {
         }
     }
 
+
+    if (key === 'a') {
+        arrival = true
+        populateVideoVehicles()
+        switchedToTtp = false
+    }
+
     /* test */
     if (key === 'c') {
         colorMode(HSB, 360, 100, 100, 100)
@@ -188,7 +201,7 @@ function keyPressed() {
 
                 /* spawn new vehicles with new targets */
                 let p = pts[pointIndex]
-                console.log(`${pointIndex} → ${p}`)
+                // console.log(`${pointIndex} → ${p}`)
                 let v = new Vehicle(p.x, p.y)
                 v.maxforce = 1
                 v.maxSpeed = 5
@@ -209,12 +222,12 @@ function keyPressed() {
  *  313 points
  */
 function addTwosDay() {
-    let pts = bpdots.textToPoints('happy twosday!', 100, 100, 48, {
+    let pts = bpdots.textToPoints('happy twosday!', 120, 180, 48, {
         sampleFactor: 0.01, // increase for more points
         // simplifyThreshold: 0 // increase to remove collinear points
     })
 
-    pts = pts.concat(bpdots.textToPoints('2.22.22 2:22pm', 90, 175, 48, {
+    pts = pts.concat(bpdots.textToPoints('2.22.22 2:22pm', 110, 255, 48, {
         sampleFactor: 0.06, // increase for more points
     }))
 
@@ -227,7 +240,7 @@ function addTwosDay() {
 function colorByPosX() {
     for (let index in vehicles) {
         vehicles[index].hue =
-            map(vehicles[index].target.x, 75, width-75, 0, 345)
+            map(vehicles[index].target.x, 120, width-120, 0, 345)
     }
 }
 
