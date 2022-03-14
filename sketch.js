@@ -21,13 +21,18 @@
  */
 
 /**
- *  ☐ center the canvas
- *  ☐ send pixels out and have them arrive in stages?
+ * ☐ morph every n pixels to a word
+ *      ☐ generate vehicle homes via ttp
+ *      ☐ fade out percentage of evenly spaced points → reassign homes
+ *      ☐ turn into smaller circles instead of squares → execute behaviors
+ *
+ * ☐ something's wrong with edges and wrap → missing pixels at load
+ * ☐ instruction div
+ * ☐ 's' can turn off arrive behavior for 5 seconds!
  */
 
 
-let song
-let font
+let bpdots
 let vehicles
 
 let amp
@@ -35,7 +40,8 @@ let arrival // flag for whether 'going home' is turned on
 
 let vid // our source video
 let playing = false;
-let button;
+let button
+let switchedToTtp
 
 const VID_WIDTH = 64
 const VID_HEIGHT = 36
@@ -43,7 +49,7 @@ let SCALE_FACTOR
 
 
 function preload() {
-    font = loadFont('data/bpdots.otf')
+    bpdots = loadFont('data/bpdots.otf')
     vid = createVideo('data/dtn240p.mp4')
     arrival = true
 }
@@ -69,6 +75,7 @@ function setup() {
     colorMode(RGB, 255)
     rectMode(CORNER)
 
+    switchedToTtp = false
     SCALE_FACTOR = width/VID_WIDTH
     vid.hide()
 
@@ -92,27 +99,27 @@ function setup() {
         for (let i=0; i<VID_WIDTH; i++) {
             // console.log(`${i}, ${j}`)
             vehicles.push(
-                new Vehicle(
-                    // i*SCALE_FACTOR-SCALE_FACTOR/2,
-                    // j*SCALE_FACTOR-SCALE_FACTOR/2))
-                    i*SCALE_FACTOR,
-                    j*SCALE_FACTOR))
+                new Vehicle(i*SCALE_FACTOR, j*SCALE_FACTOR))
         }
     }
 }
 
 
 function draw() {
-    // background(236, 37, 25)
-    background(32, 33, 51)
-
-    transferColorsToVehicles()
+    if (switchedToTtp) {
+        /* we're in HSB, we now we want a dark blue */
+        background(236, 37, 25)
+    } else {
+        /* we're in RGB because we haven't switched from video.loadpixels yet */
+        background(32, 33, 51)
+        transferColorsToVehicles()
+    }
 
     /** display all the vehicles! */
     for (let v of vehicles) {
-        v.update()
-        // v.wrap()
         v.fleeFromMouse()
+        v.update()
+        // v.edges()
         v.renderPixel()
 
         if (arrival)
@@ -150,6 +157,7 @@ function keyPressed() {
     /* stop sketch */
     if (key === 'z') {
         noLoop()
+        vid.pause()
     }
 
     /* arrival! +recolor */
@@ -161,11 +169,65 @@ function keyPressed() {
         }
     }
 
-    /* recolor in ascending rainbow :p */
+    /* test */
     if (key === 'c') {
-        for (let index in vehicles) {
-            vehicles[index].hue = index % 360
+        colorMode(HSB, 360, 100, 100, 100)
+
+        let pts = addTwosDay()
+        console.log(`pts:${pts.length} vs vehicles:${vehicles.length}`)
+        switchedToTtp = true
+
+        // assume pts is smaller than vehicles
+        let scaleFactor = vehicles.length / pts.length
+        console.log(`${scaleFactor}`)
+
+        let newVehicles = []
+        let pointIndex = 0
+        for (let i=0; i<vehicles.length; i++) {
+            if (i % int(scaleFactor) === 0) {
+
+                /* spawn new vehicles with new targets */
+                let p = pts[pointIndex]
+                console.log(`${pointIndex} → ${p}`)
+                let v = new Vehicle(p.x, p.y)
+                v.maxforce = 1
+                v.maxSpeed = 5
+                v.r = 3
+                newVehicles.push(v)
+                pointIndex++
+                pointIndex = constrain(pointIndex, 0, pts.length-1)
+            }
         }
+        vehicles = newVehicles
+    }
+
+    colorByPosX()
+}
+
+
+/** returns text point locations for "happy twosday! 2.22.22 2:22pm", centered
+ *  313 points
+ */
+function addTwosDay() {
+    let pts = bpdots.textToPoints('happy twosday!', 100, 100, 48, {
+        sampleFactor: 0.01, // increase for more points
+        // simplifyThreshold: 0 // increase to remove collinear points
+    })
+
+    pts = pts.concat(bpdots.textToPoints('2.22.22 2:22pm', 90, 175, 48, {
+        sampleFactor: 0.06, // increase for more points
+    }))
+
+    return pts
+}
+
+
+/** assign a rainbow of colors to our vehicles based on x position of target
+ */
+function colorByPosX() {
+    for (let index in vehicles) {
+        vehicles[index].hue =
+            map(vehicles[index].target.x, 75, width-75, 0, 345)
     }
 }
 

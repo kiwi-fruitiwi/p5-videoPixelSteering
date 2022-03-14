@@ -10,9 +10,8 @@ class Vehicle {
         this.target = new p5.Vector(x, y)
         this.maxspeed = 15
         this.maxforce = 25
-        this.hue = random(360)
 
-        this.showText = true
+        this.hue = random(360)
 
         /* our default color is black */
         this.color = color(0, 0, 0)
@@ -37,9 +36,8 @@ class Vehicle {
     }
 
 
-    /** makes vehicles wrap around edges */
+    /** makes vehicles wrap around edges. TODO missing pixels bug */
     wrap() {
-
         if (this.pos.x > width) {
             this.pos.x = 1
         } else if (this.pos.x < 0) {
@@ -121,21 +119,24 @@ class Vehicle {
         this.pos.add(this.vel)
         this.vel.add(this.acc)
         this.vel.limit(this.maxspeed)
-        this.vel.mult(0.99)
+        this.vel.mult(0.995)
         this.acc.mult(0)
     }
 
 
     renderPixel() {
-        fill(this.color)
-        noStroke()
-        // colorMode(HSB, 360, 100, 100, 100)
-        // fill(this.hue, 100, 100, 50)
-        rect(
-            this.pos.x,
-            this.pos.y,
-            SCALE_FACTOR,
-            SCALE_FACTOR)
-        // circle(this.pos.x, this.pos.y, this.r)
+        if (switchedToTtp) {
+            fill(this.hue, 100, 100, 50)
+            stroke(this.hue, 100, 100)
+            circle(this.pos.x, this.pos.y, this.r*2)
+        } else {
+            noStroke()
+            fill(this.color)
+            rect(
+                this.pos.x,
+                this.pos.y,
+                SCALE_FACTOR,
+                SCALE_FACTOR)
+        }
     }
 }
